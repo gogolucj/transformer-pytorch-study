@@ -1,8 +1,8 @@
 # Attention Is All You Need — PyTorch 구현 스터디 노트
 
 > **Vaswani et al., "Attention Is All You Need", NeurIPS 2017**  
-> arXiv: [1706.03762](https://arxiv.org/abs/1706.03762)
-> 논문의 전체 Transformer 아키텍처를 PyTorch로 구현한 스터디 노트
+> arXiv: [1706.03762](https://arxiv.org/abs/1706.03762)  
+> 논문의 전체 Transformer 아키텍처를 PyTorch로 구현한 스터디 노트  
 > 각 연산마다 텐서의 shape 변화를 직접 출력해 수식과 코드의 대응 관계를 추적할 수 있음
 
 ---
