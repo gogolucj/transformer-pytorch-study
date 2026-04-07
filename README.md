@@ -1,4 +1,4 @@
-# Attention Is All You Need — PyTorch 구현 스터디 노트
+# 🤖 Attention Is All You Need — PyTorch 구현 스터디 노트
 
 > **Vaswani et al., "Attention Is All You Need", NeurIPS 2017**  
 > arXiv: [1706.03762](https://arxiv.org/abs/1706.03762)  
