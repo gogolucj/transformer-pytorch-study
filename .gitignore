@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# PyTorch / Model weights
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# Data
+data/
+*.csv
+*.json
+*.parquet
+*.h5
+*.hdf5
+
+# Logs
+logs/
+runs/
+*.log
+wandb/
+lightning_logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
