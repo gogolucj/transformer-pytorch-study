@@ -357,6 +357,46 @@ nn.init.xavier_uniform_(p)
 
 Xavier 초기화는 순전파에서 각 레이어의 출력 분산이 입력 분산과 같게 유지되고, 역전파에서 gradient의 분산도 일정하게 유지되도록 설계된다. 1D bias 텐서는 초기화에서 제외한다(`p.dim() > 1` 조건).
 
+### 2.8 텐서 Shape 흐름 요약
+
+논문 Base Model 기준 (`B=2, S=10, T=8, d_model=512, h=8, d_k=64, N=6`):
+
+```
+[ENCODER]
+src tokens     (B, S)           = (2, 10)
+  ↓ Embedding × √d_model
+embedded       (B, S, d_model)  = (2, 10, 512)
+  ↓ PositionalEncoding
+x              (B, S, d_model)  = (2, 10, 512)
+  ↓ EncoderLayer × 6
+    ├─ Self-Attn
+    │   Q=K=V:   (B, S, d_model) = (2, 10, 512)
+    │   split → (B, h, S, d_k)  = (2, 8, 10, 64)
+    │   scores:  (B, h, S, S)   = (2, 8, 10, 10)
+    │   output:  (B, h, S, d_k) = (2, 8, 10, 64)
+    │   concat → (B, S, d_model) = (2, 10, 512)
+    └─ FFN
+        hidden:  (B, S, d_ff)   = (2, 10, 2048)
+        output:  (B, S, d_model) = (2, 10, 512)
+enc_output     (B, S, d_model)  = (2, 10, 512)
+
+[DECODER]
+tgt tokens     (B, T)           = (2, 8)
+  ↓ Embedding + PE
+x              (B, T, d_model)  = (2, 8, 512)
+  ↓ DecoderLayer × 6
+    ├─ Masked Self-Attn: (2, 8, 512) (tgt_mask 적용)
+    ├─ Cross-Attn
+    │   Q:   (B, h, T, d_k)    = (2, 8, 8, 64)
+    │   K,V: (B, h, S, d_k)    = (2, 8, 10, 64)
+    │   scores: (B, h, T, S)   = (2, 8, 8, 10)
+    │   output: (B, T, d_model) = (2, 8, 512)
+    └─ FFN: (2, 8, 512)
+dec_output     (B, T, d_model)  = (2, 8, 512)
+  ↓ Linear (output_proj)
+logits         (B, T, V)        = (2, 8, 10000)
+```
+
 ---
 
 ## 3. 하이퍼파라미터 & 학습 설정
@@ -425,46 +465,6 @@ torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
 ```
 
 gradient의 L2 norm이 `max_norm`을 초과하면 전체 gradient를 균일하게 스케일 다운하여 gradient exploding을 방지한다.
-
-### 2.8 텐서 Shape 흐름 요약
-
-논문 Base Model 기준 (`B=2, S=10, T=8, d_model=512, h=8, d_k=64, N=6`):
-
-```
-[ENCODER]
-src tokens     (B, S)           = (2, 10)
-  ↓ Embedding × √d_model
-embedded       (B, S, d_model)  = (2, 10, 512)
-  ↓ PositionalEncoding
-x              (B, S, d_model)  = (2, 10, 512)
-  ↓ EncoderLayer × 6
-    ├─ Self-Attn
-    │   Q=K=V:   (B, S, d_model) = (2, 10, 512)
-    │   split → (B, h, S, d_k)  = (2, 8, 10, 64)
-    │   scores:  (B, h, S, S)   = (2, 8, 10, 10)
-    │   output:  (B, h, S, d_k) = (2, 8, 10, 64)
-    │   concat → (B, S, d_model) = (2, 10, 512)
-    └─ FFN
-        hidden:  (B, S, d_ff)   = (2, 10, 2048)
-        output:  (B, S, d_model) = (2, 10, 512)
-enc_output     (B, S, d_model)  = (2, 10, 512)
-
-[DECODER]
-tgt tokens     (B, T)           = (2, 8)
-  ↓ Embedding + PE
-x              (B, T, d_model)  = (2, 8, 512)
-  ↓ DecoderLayer × 6
-    ├─ Masked Self-Attn: (2, 8, 512) (tgt_mask 적용)
-    ├─ Cross-Attn
-    │   Q:   (B, h, T, d_k)    = (2, 8, 8, 64)
-    │   K,V: (B, h, S, d_k)    = (2, 8, 10, 64)
-    │   scores: (B, h, T, S)   = (2, 8, 8, 10)
-    │   output: (B, T, d_model) = (2, 8, 512)
-    └─ FFN: (2, 8, 512)
-dec_output     (B, T, d_model)  = (2, 8, 512)
-  ↓ Linear (output_proj)
-logits         (B, T, V)        = (2, 8, 10000)
-```
 
 ---
 
